@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donate | Temple Trust</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root { --saffron:#e07b00; --deep:#8a2d00; --gold:#d4a017; --cream:#fff8ec; --ink:#3a2a1a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--cream); color:var(--ink); }
+  header { background:linear-gradient(135deg,var(--deep),var(--saffron)); color:#fff; text-align:center; padding:22px 16px; }
+  header h1 { margin:0; font-size:1.5rem; }
+  header p { margin:6px 0 0; opacity:.9; font-size:.95rem; }
+  main { max-width:520px; margin:0 auto; padding:16px; }
+  .card { background:#fff; border:1px solid #f0d9b0; border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  .card h2 { margin:0 0 12px; font-size:1.1rem; color:var(--deep); }
+  label { display:block; font-weight:600; font-size:.9rem; margin:12px 0 4px; }
+  input, select { width:100%; padding:12px; font-size:1rem; border:1px solid #d9c49a; border-radius:10px; background:#fffdf8; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chip { border:1px solid var(--saffron); background:#fff; color:var(--deep); padding:10px 14px; border-radius:999px; font-size:.95rem; cursor:pointer; }
+  .chip.on { background:var(--saffron); color:#fff; }
+  .btn { display:block; width:100%; text-align:center; text-decoration:none; padding:14px; margin-top:12px; border:0; border-radius:12px; font-size:1.05rem; font-weight:700; cursor:pointer; background:linear-gradient(135deg,var(--saffron),var(--gold)); color:#fff; }
+  .btn.alt { background:#fff; color:var(--deep); border:1px solid var(--saffron); font-weight:600; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row .btn { margin-top:10px; font-size:.95rem; padding:12px 6px; }
+  .hidden { display:none; }
+  .note { font-size:.85rem; color:#6b5a45; margin-top:10px; line-height:1.45; }
+  .err { color:#b00020; font-size:.9rem; margin-top:8px; min-height:1.2em; }
+  #qr { display:flex; justify-content:center; margin:14px 0 4px; }
+  .kv { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed #ecd9b3; font-size:.95rem; }
+  .kv span:last-child { font-weight:600; text-align:right; word-break:break-word; }
+  .upi { background:#fff3dc; padding:10px; border-radius:10px; text-align:center; font-weight:700; letter-spacing:.3px; word-break:break-all; }
+  .ok { text-align:center; font-size:2rem; }
+  @media print { header, .noprint { display:none !important; } body { background:#fff; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="trustName">Temple Trust</h1>
+  <p>Offer your donation securely through any UPI app</p>
+</header>
+
+<main>
+
+  <!-- STEP 1 -->
+  <section class="card" id="step1">
+    <h2>1. Donation details</h2>
+
+    <label for="name">Your name</label>
+    <input id="name" type="text" autocomplete="name" placeholder="Full name">
+
+    <label for="phone">Mobile number (optional)</label>
+    <input id="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10-digit mobile">
+
+    <label for="purpose">Purpose</label>
+    <select id="purpose"></select>
+
+    <label>Amount (₹)</label>
+    <div class="chips" id="chips"></div>
+    <input id="amount" type="number" inputmode="numeric" min="1" step="1" placeholder="Or enter another amount" style="margin-top:10px">
+
+    <div class="err" id="err1"></div>
+    <button class="btn" id="goPay">Proceed to pay</button>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="card hidden" id="step2">
+    <h2>2. Pay with your UPI app</h2>
+    <div class="kv"><span>Reference</span><span id="refOut"></span></div>
+    <div class="kv"><span>Amount</span><span id="amtOut"></span></div>
+
+    <div id="mobileBtns" class="hidden">
+      <a class="btn" id="payAny" href="#">Pay with UPI app</a>
+      <div class="row">
+        <a class="btn alt" id="payGpay" href="#">Google Pay</a>
+        <a class="btn alt" id="payPhonepe" href="#">PhonePe</a>
+        <a class="btn alt" id="payPaytm" href="#">Paytm</a>
+        <a class="btn alt" id="payBhim" href="#">BHIM / Other</a>
+      </div>
+    </div>
+
+    <div id="desktopMsg" class="note hidden">On a computer? Scan this QR with any UPI app on your phone.</div>
+    <div id="qr"></div>
+
+    <p class="note">If your app shows an error, don't worry: copy the UPI ID below, open your UPI app, choose "Pay to UPI ID", enter the same amount, and add the reference in the note.</p>
+    <div class="upi" id="upiId"></div>
+    <button class="btn alt" id="copyUpi" type="button">Copy UPI ID</button>
+
+    <details class="card" style="margin:14px 0 0;padding:12px 14px;background:#fffdf8">
+      <summary style="cursor:pointer;font-weight:600;color:var(--deep)">Pay by bank transfer (NEFT / IMPS)</summary>
+      <div id="bankRows" style="margin-top:8px"></div>
+      <p class="note">Please write the reference above in the transfer remarks. Use the transfer's UTR / reference number in the next step.</p>
+    </details>
+
+    <button class="btn" id="paidBtn" type="button">I have paid – continue</button>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="card hidden" id="step3">
+    <h2>3. Confirm your payment</h2>
+    <p class="note" style="margin-top:0">After paying, open your payment details and enter the <b>UPI Ref No. / UTR</b> (12 digits for UPI; bank transfers may show a longer reference) so the trust can match your donation.</p>
+    <label for="utr">UPI Ref No. / UTR</label>
+    <input id="utr" type="text" inputmode="text" autocapitalize="characters" maxlength="22" placeholder="Reference number">
+    <div class="err" id="err3"></div>
+    <button class="btn" id="submitUtr" type="button">Submit</button>
+    <button class="btn alt" id="backBtn" type="button">Back</button>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="card hidden" id="step4">
+    <div class="ok">🙏</div>
+    <h2 style="text-align:center">Thank you for your donation</h2>
+    <div class="kv"><span>Reference</span><span id="rRef"></span></div>
+    <div class="kv"><span>Name</span><span id="rName"></span></div>
+    <div class="kv"><span>Purpose</span><span id="rPurpose"></span></div>
+    <div class="kv"><span>Amount</span><span id="rAmt"></span></div>
+    <div class="kv"><span>UPI Ref / UTR</span><span id="rUtr"></span></div>
+    <div class="kv"><span>Date</span><span id="rDate"></span></div>
+    <div class="kv"><span>Status</span><span>Received – pending verification by trust</span></div>
+    <p class="note" id="saveNote"></p>
+    <a class="btn alt noprint" id="waBtn" href="#" target="_blank" rel="noopener">Send details on WhatsApp</a>
+    <button class="btn alt noprint" onclick="window.print()" type="button">Print / Save as PDF</button>
+    <button class="btn noprint" onclick="location.reload()" type="button">New donation</button>
+  </section>
+
+</main>
+
+<script>
+/* ============ EDIT THESE ============ */
+const CONFIG = {
+  TRUST_NAME:  "Shri Chathurbuja Ramar Seva Trust",
+  UPI_ID:      "shri9944455@barodampay",          // the TRUST's UPI ID (VPA)
+  PAYEE_NAME:  "SHRI CHATHURBUJA RAMAR SEVA TRUST", // name shown in the UPI app
+  PRESETS:     [101, 251, 501, 1001, 2501],
+  PURPOSES:    ["General Donation", "Annadhanam", "Temple Renovation", "Festival / Utsavam"],
+  MIN_AMOUNT:  1,
+  MAX_AMOUNT:  100000,
+  SHEETDB_URL: "",                    // e.g. "https://sheetdb.io/api/v1/xxxxxxxx" (leave "" to skip saving)
+  WHATSAPP_NO: "",                    // e.g. "919876543210" (country code, no +) – leave "" to hide button
+  BANK: {                             // shown under "Pay by bank transfer (NEFT / IMPS)"
+    ACCOUNT_NAME: "SHRI CHATHURBUJA RAMAR SEVA TRUST",
+    ACCOUNT_NO:   "10450100021455",
+    BANK_NAME:    "Bank of Baroda",
+    BRANCH:       "Chingleput Branch",
+    IFSC:         "BARB0CHINGL"       // 5th character is zero
+  }
+};
+/* ==================================== */
+
+const $ = id => document.getElementById(id);
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let state = { ref:"", amount:0, name:"", phone:"", purpose:"" };
+
+function makeRef() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return "DN" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + rnd;
+}
+
+function upiQuery() {
+  const note = ("Donation " + state.ref).slice(0, 40);
+  const q = new URLSearchParams({
+    pa: CONFIG.UPI_ID,
+    pn: CONFIG.PAYEE_NAME,
+    am: state.amount.toFixed(2),
+    cu: "INR",
+    tn: note
+  });
+  return q.toString().replace(/\+/g, "%20");
+}
+function upiLink(scheme) { return scheme + upiQuery(); }
+
+function show(id) {
+  ["step1","step2","step3","step4"].forEach(s => $(s).classList.add("hidden"));
+  $(id).classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---- setup ---- */
+$("trustName").textContent = CONFIG.TRUST_NAME;
+[["Account name", CONFIG.BANK.ACCOUNT_NAME], ["Account number", CONFIG.BANK.ACCOUNT_NO],
+ ["Bank", CONFIG.BANK.BANK_NAME], ["Branch", CONFIG.BANK.BRANCH], ["IFSC", CONFIG.BANK.IFSC]].forEach(([k, v]) => {
+  const row = document.createElement("div"); row.className = "kv";
+  const a = document.createElement("span"); a.textContent = k;
+  const b = document.createElement("span"); b.textContent = v;
+  row.append(a, b); $("bankRows").appendChild(row);
+});
+CONFIG.PURPOSES.forEach(p => { const o = document.createElement("option"); o.textContent = p; $("purpose").appendChild(o); });
+CONFIG.PRESETS.forEach(v => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = "₹" + v;
+  b.onclick = () => { $("amount").value = v; markChip(); };
+  $("chips").appendChild(b);
+});
+function markChip() {
+  const v = Number($("amount").value);
+  [...$("chips").children].forEach((c, i) => c.classList.toggle("on", CONFIG.PRESETS[i] === v));
+}
+$("amount").addEventListener("input", markChip);
+
+/* ---- step 1 -> 2 ---- */
+$("goPay").onclick = () => {
+  const name = $("name").value.trim();
+  const phone = $("phone").value.trim();
+  const amount = Math.round(Number($("amount").value));
+  $("err1").textContent = "";
+  if (name.length < 2) return $("err1").textContent = "Please enter your name.";
+  if (phone && !/^[6-9]\d{9}$/.test(phone)) return $("err1").textContent = "Enter a valid 10-digit mobile number or leave it blank.";
+  if (!amount || amount < CONFIG.MIN_AMOUNT) return $("err1").textContent = "Please choose or enter an amount.";
+  if (amount > CONFIG.MAX_AMOUNT) return $("err1").textContent = "For amounts above ₹" + CONFIG.MAX_AMOUNT.toLocaleString("en-IN") + ", please contact the trust.";
+
+  state = { ref: makeRef(), amount, name, phone, purpose: $("purpose").value };
+  $("refOut").textContent = state.ref;
+  $("amtOut").textContent = "₹" + amount.toLocaleString("en-IN");
+  $("upiId").textContent = CONFIG.UPI_ID;
+
+  $("payAny").href       = upiLink("upi://pay?");
+  $("payGpay").href      = upiLink("tez://upi/pay?");
+  $("payPhonepe").href   = upiLink("phonepe://pay?");
+  $("payPaytm").href     = upiLink("paytmmp://pay?");
+  $("payBhim").href      = upiLink("upi://pay?");
+
+  $("qr").innerHTML = "";
+  if (window.QRCode) {
+    new QRCode($("qr"), { text: upiLink("upi://pay?"), width: 200, height: 200 });
+  }
+  $("mobileBtns").classList.toggle("hidden", !isMobile);
+  $("desktopMsg").classList.toggle("hidden", isMobile);
+  show("step2");
+};
+
+$("copyUpi").onclick = async () => {
+  try { await navigator.clipboard.writeText(CONFIG.UPI_ID); $("copyUpi").textContent = "Copied ✓"; }
+  catch (e) { $("copyUpi").textContent = "Select and copy the ID above"; }
+  setTimeout(() => $("copyUpi").textContent = "Copy UPI ID", 2500);
+};
+
+$("paidBtn").onclick = () => show("step3");
+$("backBtn").onclick = () => show("step2");
+
+/* ---- step 3 -> 4 ---- */
+$("submitUtr").onclick = async () => {
+  const utr = $("utr").value.trim().toUpperCase();
+  $("err3").textContent = "";
+  if (!/^[A-Z0-9]{12,22}$/.test(utr)) return $("err3").textContent = "Please enter the reference number exactly as shown in your payment details (12–22 letters/digits).";
+
+  const when = new Date();
+  const row = {
+    Reference: state.ref,
+    Date: when.toLocaleString("en-IN"),
+    Name: state.name,
+    Phone: state.phone,
+    Purpose: state.purpose,
+    Amount: state.amount,
+    UTR: utr,
+    Status: "Pending verification"
+  };
+
+  $("submitUtr").disabled = true;
+  $("submitUtr").textContent = "Saving...";
+  let saved = false;
+  if (CONFIG.SHEETDB_URL) {
+    try {
+      const r = await fetch(CONFIG.SHEETDB_URL, {
+        method: "POST",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ data: [row] })
+      });
+      saved = r.ok;
+    } catch (e) { saved = false; }
+  }
+
+  $("rRef").textContent = state.ref;
+  $("rName").textContent = state.name;
+  $("rPurpose").textContent = state.purpose;
+  $("rAmt").textContent = "₹" + state.amount.toLocaleString("en-IN");
+  $("rUtr").textContent = utr;
+  $("rDate").textContent = row.Date;
+  $("saveNote").textContent = saved
+    ? "Your donation details have been recorded. The trust will verify it against the bank credit."
+    : "Please keep this screen (or a screenshot) as your proof. The trust will verify it against the bank credit.";
+
+  if (CONFIG.WHATSAPP_NO) {
+    const msg = "Donation " + state.ref + "\nName: " + state.name + "\nPurpose: " + state.purpose +
+                "\nAmount: Rs " + state.amount + "\nUPI Ref/UTR: " + utr;
+    $("waBtn").href = "https://wa.me/" + CONFIG.WHATSAPP_NO + "?text=" + encodeURIComponent(msg);
+  } else {
+    $("waBtn").classList.add("hidden");
+  }
+
+  $("submitUtr").disabled = false;
+  $("submitUtr").textContent = "Submit";
+  show("step4");
+};
+</script>
+</body>
+</html>
